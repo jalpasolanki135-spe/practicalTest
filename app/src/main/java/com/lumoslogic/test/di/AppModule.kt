@@ -19,17 +19,14 @@ import retrofit2.converter.gson.GsonConverterFactory
 object AppModule {
 
     @Provides
-    fun provideApi(): PostApiService =
-        Retrofit.Builder()
+    fun provideApi(): PostApiService = Retrofit.Builder()
             .baseUrl("https://jsonplaceholder.typicode.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(PostApiService::class.java)
 
     @Provides
-    fun provideDatabase(
-        @ApplicationContext context: Context
-    ): AppDatabase =
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(
             context,
             AppDatabase::class.java,

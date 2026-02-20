@@ -12,19 +12,13 @@ fun AppNavGraph() {
 
     val navController = rememberNavController()
 
-    NavHost(
-        navController = navController,
-        startDestination = "list"
-    ) {
+    NavHost(navController = navController, startDestination = "list") {
 
         composable("list") {
             PostListScreen(navController)
         }
 
-        composable(
-            "detail/{title}/{body}"
-        ) {
-
+        composable("detail/{title}/{body}") {
             PostDetailScreen(
                 title = it.arguments?.getString("title") ?: "",
                 body = it.arguments?.getString("body") ?: ""
