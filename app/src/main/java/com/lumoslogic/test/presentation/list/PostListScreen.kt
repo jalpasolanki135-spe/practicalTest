@@ -123,6 +123,7 @@ private fun PostListContent(
             val post = state.posts[index]
 
             PostCard(
+                number = index + 1,
                 post = post,
                 onClick = { onPostClick(post) }
             )
@@ -135,8 +136,8 @@ private fun PostListContent(
             }
         }
 
-        // Pagination loading footer
-        if (state.isPaginating) {
+        // Pagination loading footer - only show if more data exists
+        if (state.isPaginating && state.hasMoreData) {
             item {
                 LoadingIndicator(
                     modifier = Modifier.fillMaxWidth()

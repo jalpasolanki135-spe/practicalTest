@@ -18,6 +18,8 @@ class PostListViewModel @Inject constructor(
     private val _state = MutableStateFlow(PostListUiState())
     val state = _state.asStateFlow()
 
+    private var lastLoadedPage = 0
+
     init {
         observePosts()
         loadMore()
@@ -26,12 +28,19 @@ class PostListViewModel @Inject constructor(
     private fun observePosts() {
         viewModelScope.launch {
             repository.observePosts().collect { posts ->
-                _state.update {
-                    it.copy(
+                _state.update { currentState ->
+                    // Stop paginating when data is loaded
+                    val isPaginating = currentState.isPaginating && posts.size == currentState.posts.size
+                    
+                    // Check if we have more data (less than page size means no more)
+                    val hasMoreData = posts.size % 20 == 0 && posts.size < 100
+                    
+                    currentState.copy(
                         posts = posts,
                         isLoading = false,
                         isRefreshing = false,
-                        hasMoreData = posts.size >= it.posts.size
+                        isPaginating = false,
+                        hasMoreData = hasMoreData
                     )
                 }
             }
@@ -47,6 +56,7 @@ class PostListViewModel @Inject constructor(
                     hasMoreData = true
                 ) 
             }
+            lastLoadedPage = 0
             try {
                 repository.refreshPosts()
             } catch (e: Exception) {
@@ -61,13 +71,19 @@ class PostListViewModel @Inject constructor(
     }
 
     fun loadMore() {
-        if (_state.value.isPaginating || !_state.value.hasMoreData) return
+        val currentState = _state.value
+        
+        // Prevent duplicate calls
+        if (currentState.isPaginating || !currentState.hasMoreData) {
+            return
+        }
 
         viewModelScope.launch {
             _state.update { it.copy(isPaginating = true, error = null) }
 
             try {
                 repository.loadNextPage()
+                // Success - observePosts will update state
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
