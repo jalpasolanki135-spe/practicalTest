@@ -15,4 +15,7 @@ interface PostDao {
 
     @Query("SELECT * FROM posts")
     fun observePosts(): Flow<List<PostEntity>>
+
+    @Query("DELETE FROM posts")
+    suspend fun deleteAllPosts()
 }

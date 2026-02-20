@@ -8,4 +8,6 @@ interface PostRepository {
     fun observePosts(): Flow<List<Post>>
 
     suspend fun loadNextPage()
+
+    suspend fun refreshPosts()
 }

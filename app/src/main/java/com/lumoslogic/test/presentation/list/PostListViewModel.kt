@@ -24,15 +24,36 @@ class PostListViewModel @Inject constructor(
     }
 
     private fun observePosts() {
-
         viewModelScope.launch {
-
             repository.observePosts().collect { posts ->
-
                 _state.update {
                     it.copy(
                         posts = posts,
-                        isLoading = false
+                        isLoading = false,
+                        isRefreshing = false,
+                        hasMoreData = posts.size >= it.posts.size
+                    )
+                }
+            }
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _state.update { 
+                it.copy(
+                    isRefreshing = true, 
+                    error = null,
+                    hasMoreData = true
+                ) 
+            }
+            try {
+                repository.refreshPosts()
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isRefreshing = false,
+                        error = "Failed to refresh: ${e.message}"
                     )
                 }
             }
@@ -40,22 +61,25 @@ class PostListViewModel @Inject constructor(
     }
 
     fun loadMore() {
+        if (_state.value.isPaginating || !_state.value.hasMoreData) return
 
         viewModelScope.launch {
-
-            _state.update { it.copy(isLoading = true) }
+            _state.update { it.copy(isPaginating = true, error = null) }
 
             try {
                 repository.loadNextPage()
             } catch (e: Exception) {
-
                 _state.update {
                     it.copy(
-                        isLoading = false,
-                        error = "Something went wrong"
+                        isPaginating = false,
+                        error = "Failed to load more: ${e.message}"
                     )
                 }
             }
         }
+    }
+
+    fun clearError() {
+        _state.update { it.copy(error = null) }
     }
 }
